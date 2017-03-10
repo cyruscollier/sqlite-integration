@@ -33,7 +33,9 @@ class PDODB extends wpdb {
 	 * @var reference to the object of PDOEngine class.
 	 * @access protected
 	 */
-	protected $dbh = null;
+	public $dbh = null;
+
+	protected $suppress_filters;
 
 	/**
 	 * Constructor
@@ -43,7 +45,7 @@ class PDODB extends wpdb {
 	 *
 	 * @see wpdb::__construct()
 	 */
-	public function __construct() {
+	public function __construct($suppress_filters = false) {
 		register_shutdown_function(array($this, '__destruct'));
 
 		if (WP_DEBUG)
@@ -52,6 +54,8 @@ class PDODB extends wpdb {
 		$this->init_charset();
 
 		$this->db_connect();
+
+		$this->suppress_filters = $suppress_filters;
 	}
 	/**
 	 * Desctructor
@@ -221,6 +225,15 @@ class PDODB extends wpdb {
 	public function check_connection($allow_bail=true) {
 	  return true;
 	}
+	public function close()
+    {
+        if (!$this->dbh) return false;
+        $this->dbh = null;
+        $this->ready = false;
+        $this->has_connected = false;
+
+        return true;
+    }
 	/**
 	 * Method to execute the query.
 	 *
@@ -233,8 +246,9 @@ class PDODB extends wpdb {
 		if (!$this->ready)
 			return false;
 
-		$query = apply_filters('query', $query);
-
+		if (!$this->suppress_filters) {
+            $query = apply_filters('query', $query);
+        }
 		$return_val = 0;
 		$this->flush();
 
