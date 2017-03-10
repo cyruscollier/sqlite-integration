@@ -296,7 +296,7 @@ class PDOSQLiteDriver {
 		//$unlimited_query = preg_replace('/\\bGROUP\\s*BY\\s*.*/imsx', '', $unlimited_query);
 		// we no longer use SELECT COUNT query
 		//$unlimited_query = $this->_transform_to_count($unlimited_query);
-		$_wpdb = new PDODB();
+		$_wpdb = new PDODB(true);
 		$result = $_wpdb->query($unlimited_query);
 		$wpdb->dbh->found_rows_result = $result;
 		$_wpdb = null;
@@ -420,7 +420,7 @@ class PDOSQLiteDriver {
 	 * @access private
 	 */
 	private function rewrite_limit_usage(){
-		$_wpdb = new PDODB();
+		$_wpdb = new PDODB(true);
 		$options = $_wpdb->get_results('PRAGMA compile_options');
 		foreach ($options as $opt) {
 			if (stripos($opt->compile_option, 'ENABLE_UPDATE_DELETE_LIMIT') !== false) return;
@@ -439,7 +439,7 @@ class PDOSQLiteDriver {
 	 * @access private
 	 */
 	private function rewrite_order_by_usage() {
-		$_wpdb = new PDODB();
+		$_wpdb = new PDODB(true);
 		$options = $_wpdb->get_results('PRAGMA compile_options');
 		foreach ($options as $opt) {
 			if (stripos($opt->compile_option, 'ENABLE_UPDATE_DELETE_LIMIT') !== false) return;
@@ -606,7 +606,7 @@ class PDOSQLiteDriver {
 			$update_data = trim($match_0[3]);
 			// prepare two unique key data for the table
 			// 1. array('col1', 'col2, col3', etc) 2. array('col1', 'col2', 'col3', etc)
-			$_wpdb = new PDODB();
+			$_wpdb = new PDODB(true);
 			$indexes = $_wpdb->get_results("SHOW INDEX FROM {$table_name}");
 			if (!empty($indexes)) {
 			  foreach ($indexes as $index) {
@@ -763,7 +763,7 @@ class PDOSQLiteDriver {
 			$tbl_name = str_replace($wpdb->prefix, '', $tbl_name);
 			if ($tbl_name && in_array($tbl_name, $wpdb->tables)) {
 				$query = str_replace($match[0], '', $this->_query);
-				$_wpdb = new PDODB();
+				$_wpdb = new PDODB(true);
 				$results = $_wpdb->get_results($query);
 				$_wpdb = null;
 				/* $compare = function($a, $b) { */
@@ -810,7 +810,7 @@ class PDOSQLiteDriver {
 		} else if (stripos($this->_query, $pattern2) !== false) {
 			$time = time();
 			$prep_query = "SELECT a.meta_id AS aid, b.meta_id AS bid FROM $wpdb->sitemeta AS a INNER JOIN $wpdb->sitemeta AS b ON a.meta_key='_site_transient_timeout_'||substr(b.meta_key, 17) WHERE b.meta_key='_site_transient_'||substr(a.meta_key, 25) AND a.meta_value < $time";
-			$_wpdb = new PDODB();
+			$_wpdb = new PDODB(true);
 			$ids   = $_wpdb->get_results($prep_query);
 			foreach ($ids as $id) {
 				$ids_to_delete[] = $id->aid;
