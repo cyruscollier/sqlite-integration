@@ -647,13 +647,13 @@ class PDOEngine extends PDO {
 			do {
 				if ($this->query_type == 'update' || $this->query_type == 'replace') {
 					try {
-						$this->beginTransaction();
+						//$this->beginTransaction();
 						$statement->execute($this->extracted_variables);
-						$this->commit();
+						//$this->commit();
 					} catch (PDOException $err) {
 						$reason  = $err->getCode();
 						$message = $err->getMessage();
-						$this->rollBack();
+						//$this->rollBack();
 					}
 				} else {
 					try {
@@ -669,13 +669,13 @@ class PDOEngine extends PDO {
 			do{
 				if ($this->query_type == 'update' || $this->query_type == 'replace') {
 					try {
-						$this->beginTransaction();
+						//$this->beginTransaction();
 						$statement->execute();
-						$this->commit();
+						//$this->commit();
 					} catch (PDOException $err) {
 						$reason  = $err->getCode();
 						$message = $err->getMessage();
-						$this->rollBack();
+						//$this->rollBack();
 					}
 				} else {
 					try {
@@ -968,7 +968,7 @@ class PDOEngine extends PDO {
 		$message         = '';
 		//$queries = explode(";", $this->rewritten_query);
 		try {
-			$this->beginTransaction();
+			//$this->beginTransaction();
 			foreach ($rewritten_query as $single_query) {
 				$this->queries[] = "Executing:\n" . $single_query;
 				$single_query    = trim($single_query);
@@ -980,9 +980,9 @@ class PDOEngine extends PDO {
 			$reason  = $err->getCode();
 			$message = $err->getMessage();
 			if (5 == $reason || 6 == $reason) {
-				$this->commit();
+				//$this->commit();
 			} else {
-				$this->rollBack();
+				//$this->rollBack();
 			}
 		}
 		if ($reason > 0) {
@@ -1009,7 +1009,7 @@ class PDOEngine extends PDO {
 			unset($rewritten_query['recursion']);
 		}
 		try {
-			$this->beginTransaction();
+			//$this->beginTransaction();
 			if (is_array($rewritten_query)) {
 				foreach ($rewritten_query as $single_query) {
 					$this->queries[] = "Executing:\n" . $single_query;
@@ -1027,10 +1027,10 @@ class PDOEngine extends PDO {
 			$reason  = $err->getCode();
 			$message = $err->getMessage();
 			if (5 == $reason || 6 == $reason) {
-				$this->commit();
+				//$this->commit();
 				usleep(10000);
 			} else {
-				$this->rollBack();
+				//$this->rollBack();
 			}
 		}
 		if ($re_query != '') {
@@ -1341,7 +1341,9 @@ class PDOEngine extends PDO {
 	 * @see PDO::commit()
 	 */
 	public function commit() {
-		$this->pdo->commit();
+        if ($this->has_active_transaction) {
+            $this->pdo->commit();
+        }
 		$this->has_active_transaction = false;
 	}
 	/**
@@ -1350,7 +1352,9 @@ class PDOEngine extends PDO {
 	 * @see PDO::rollBack()
 	 */
 	public function rollBack() {
-		$this->pdo->rollBack();
+        if ($this->has_active_transaction) {
+            $this->pdo->rollBack();
+        }
 		$this->has_active_transaction = false;
 	}
 }
