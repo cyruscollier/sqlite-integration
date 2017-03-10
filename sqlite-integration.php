@@ -74,7 +74,7 @@ define('SQLiteListFile', SQLiteFilePath . '/utilities/plugin_lists.json');
  */
 if (!class_exists('SQLiteIntegrationUtils')) {
 	require_once SQLiteFilePath . '/utilities/utility.php';
-	$utils = new SQLiteIntegrationUtils();
+	$GLOBALS['utils'] = $utils = new SQLiteIntegrationUtils();
 }
 if (!class_exists('SQLiteIntegrationDocument')) {
 	require_once SQLiteFilePath . '/utilities/documentation.php';
