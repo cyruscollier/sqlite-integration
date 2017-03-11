@@ -30,7 +30,7 @@ if(!defined('PDO_DEBUG')){
 class PDODB extends wpdb {
 	/**
 	 *
-	 * @var reference to the object of PDOEngine class.
+	 * @var PDOEngine
 	 * @access protected
 	 */
 	public $dbh = null;
@@ -118,20 +118,9 @@ class PDODB extends wpdb {
 	 * @see wpdb::_real_escape()
 	 */
 	function _real_escape($string) {
-		return addslashes($string);
+        return addslashes($string);
 	}
-	/**
-	 * Method to dummy out wpdb::esc_like() function.
-	 *
-	 * WordPress 4.0.0 introduced esc_like() function that adds backslashes to %,
-	 * underscore and backslash, which is not interpreted as escape character
-	 * by SQLite. So we override it and dummy out this function.
-	 *
-	 * @see wpdb::esc_like()
-	 */
-	public function esc_like($text) {
-		return $text;
-	}
+
 	/**
 	 * Method to put out the error message.
 	 *
@@ -179,7 +168,29 @@ class PDODB extends wpdb {
 			</div>";
 		}
 	}
-	/**
+
+	public function prepare($query, $args)
+    {
+        if ( is_null( $query ) )
+            return;
+
+        $args = func_get_args();
+
+        // If args were passed as an array (as in vsprintf), move them up
+        if ( isset( $args[1] ) && is_array($args[1]) ) {
+            $_query = array_shift($args);
+            array_unshift($args, $_query);
+        }
+        $query = &$args[0];
+        $query = str_replace( "'%s'", '%s', $query ); // in case someone mistakenly already singlequoted it
+        $query = str_replace( '"%s"', '%s', $query ); // doublequote unquoting
+
+        $query = preg_replace("/LIKE %s/", "\\0 ESCAPE '\\'", $query);
+
+        return call_user_func_array( 'parent::prepare', $args);
+    }
+
+    /**
 	 * Method to flush cached data.
 	 *
 	 * This overrides wpdb::flush(). This is not necessarily overridden, because
