@@ -82,13 +82,37 @@ class PDODB extends wpdb {
 			$collate = $this->collate;
 	}
 	/**
-	 * Method to dummy out wpdb::set_sql_mode()
-	 *
 	 * @see wpdb::set_sql_mode()
 	 */
 	public function set_sql_mode($modes = array()) {
-		unset($modes);
-		return;
+        if ( empty( $modes ) ) {
+            $modes_str = $this->dbh->session_sql_modes;
+
+            if ( empty( $modes_str ) ) {
+                return;
+            }
+
+            $modes = explode( ',', $modes_str );
+        }
+
+        $modes = array_change_key_case( $modes, CASE_UPPER );
+
+        /**
+         * Filters the list of incompatible SQL modes to exclude.
+         *
+         * @since 3.9.0
+         *
+         * @param array $incompatible_modes An array of incompatible modes.
+         */
+        $incompatible_modes = (array) apply_filters( 'incompatible_sql_modes', $this->incompatible_modes );
+
+        foreach ( $modes as $i => $mode ) {
+            if ( in_array( $mode, $incompatible_modes ) ) {
+                unset( $modes[ $i ] );
+            }
+        }
+
+		$this->dbh->session_sql_modes = implode(',', $modes);
 	}
 	/**
 	 * Method to select the database connection.

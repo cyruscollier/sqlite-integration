@@ -157,6 +157,8 @@ class PDOEngine extends PDO {
 	 */
 	protected $has_active_transaction = false;
 
+	public $session_sql_modes = '';
+
 	/**
 	 * Constructor
 	 *
@@ -396,6 +398,9 @@ class PDOEngine extends PDO {
 					$this->return_value = false;
 				}
 				break;
+            case 'select_sql_mode':
+                $this->results = [(object) ['sql_mode' =>$this->session_sql_modes]];
+                break;
 			default:
 				$engine = $this->prepare_engine($this->query_type);
 				$this->rewritten_query = $engine->rewrite_query($query, $this->query_type);
@@ -809,7 +814,11 @@ class PDOEngine extends PDO {
 	 * @return boolean|string
 	 */
 	private function determine_query_type($query) {
-		$result = preg_match('/^\\s*(SET|EXPLAIN|PRAGMA|SELECT\\s*FOUND_ROWS|SELECT|INSERT|UPDATE|REPLACE|DELETE|ALTER|CREATE|DROP\\s*INDEX|DROP|SHOW\\s*\\w+\\s*\\w+\\s*|DESCRIBE|DESC|TRUNCATE|OPTIMIZE|CHECK|ANALYZE)/i', $query, $match);
+		$result = preg_match(
+		    '/^\\s*(SET|EXPLAIN|PRAGMA|SELECT\\s*FOUND_ROWS|SELECT\\s*@@SESSION\.sql_mode|SELECT|INSERT|UPDATE|REPLACE|DELETE|ALTER|CREATE|DROP\\s*INDEX|DROP|SHOW\\s*\\w+\\s*\\w+\\s*|DESCRIBE|DESC|TRUNCATE|OPTIMIZE|CHECK|ANALYZE)/i',
+            $query,
+            $match
+        );
 
 		if (!$result) {
 			return false;
@@ -836,7 +845,10 @@ class PDOEngine extends PDO {
 		if (stripos($this->query_type, 'drop index') !== false) {
 			$this->query_type = 'drop_index';
 		}
-		return true;
+        if (stripos($this->query_type, 'session.sql_mode') !== false) {
+            $this->query_type = 'select_sql_mode';
+        }
+        return true;
 	}
 
 	/**
